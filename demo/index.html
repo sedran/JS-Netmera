@@ -1,0 +1,262 @@
+<!DOCTYPE HTML>
+
+<html>
+	<head>
+		<title>JS-Netmera Rest Wrapper</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+		<script type="text/javascript" src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+		<script type="text/javascript" src="js-netmera-1.1.0.js"></script>
+	    
+	    <link href="css/default-form.css" media="screen" rel="stylesheet" type="text/css" />
+	    
+		<script type="text/javascript">
+			$(document).ready(function() {
+				var page = 0;
+				var max = 10;
+				var objectName = null;
+				
+				$("#init").click(function() {
+					var apiKey = $("#apiKey").val();
+					if (apiKey) {
+						NetmeraClient.init(apiKey);
+						$("#apiInitialize").hide();
+						$("#contentCreate").show();
+					} else {
+						alert("Api Key can not be empty...");
+					}
+				});
+				
+				$("#save").click(function() {
+					objectName = $("#objectName").val();
+					var userName = $("#userName").val();
+					var userPoint = $("#userPoint").val();
+					if (userName && userPoint && objectName) {
+						var content = new NetmeraContent(objectName);
+						content.add("userName", userName);
+						content.add("userPoint", userPoint * 1);
+						content.create(function() {
+							$("#contentCreate").hide();
+							$("#contentList").show();
+							searchItems();
+						}, function(error) {
+							// typeof error = NetmeraException
+							alert(error.getMessage());
+						});
+					} else {
+						alert("UserName, UserPoint and ObjectName can not be empty...");
+					}
+				});
+				
+				$("#searchWithSearchText").click(function() {
+					var searchText = $("#searchKey").val();
+					searchItems(searchText);
+				});
+				
+				$("#search").click(function() {
+					objectName = $("#objectName").val();
+					if (objectName) {
+						$("#contentCreate").hide();
+						$("#contentList").show();
+						searchItems();
+					} else {
+						alert("ObjectName can not be empty...");
+					}
+				});
+				
+				$("#loadMore").click(function() {
+					var searchText = $("#searchKey").val();
+					page++;
+					searchItemsPagination(searchText);
+				});
+				
+				function searchItemsPagination(searchText) {
+					var service = new NetmeraService(objectName);
+					service.setMax(max);
+					service.setPage(page);
+					
+					if (searchText) {
+						service.addSearchText(searchText);
+					} else {
+						service.setSortBy("userPoint");
+						service.setSortOrder("ascending");
+					}
+					
+					service.search(function(contents) {
+						$.each(contents, function(key, val) {
+							$liItem = $("<li/>");
+							$liItem.addClass("item");
+							
+							$spanItemTop = $("<span/>");
+							$spanItemTop.addClass("item-corners");
+							$spanItemTop.addClass("item-corners-top");
+							$spanItemTop.append("<span class='ic1'></span><span class='ic2'></span><span class='ic3'></span><span class='ic4'></span>");
+							
+							$divItem = $("<div/>");
+							$divItem.addClass("clr");
+							$divItem.addClass("item-inner");
+							$divItem.append("<div class='text'><h4><a href='#'><span>" + val.get("userName") + "</span></a></h4><ul class='info-list'><li class='info-item'><i class='icon i-directory'></i><span class='label'>" + val.get("userPoint") + "</span></li></ul></div>");
+							
+							$spanItemBottom = $("<span/>");
+							$spanItemBottom.addClass("item-corners");
+							$spanItemBottom.addClass("item-corners-bottom");
+							$spanItemBottom.append("<span class='ic4'></span><span class='ic3'></span><span class='ic2'></span><span class='ic1'></span>");
+							
+							$liItem.append($spanItemTop).append($divItem).append($spanItemBottom);
+							$("#contentListUl").append($liItem);
+						});
+					}, function(error) {
+						// typeof error = NetmeraException
+						alert(error.getMessage());
+					});
+				}
+				
+				function searchItems(searchText) {
+					page = 0;
+					var service = new NetmeraService(objectName);
+					service.setMax(max);
+					service.setPage(page);
+					
+					if (searchText) {
+						service.addSearchText(searchText);
+					} else {
+						service.setSortBy("userPoint");
+						service.setSortOrder("ascending");
+					}
+					
+					service.search(function(contents) {
+						$("#contentListUl").html("");
+						$.each(contents, function(key, val) {
+							$liItem = $("<li/>");
+							$liItem.addClass("item");
+							
+							$spanItemTop = $("<span/>");
+							$spanItemTop.addClass("item-corners");
+							$spanItemTop.addClass("item-corners-top");
+							$spanItemTop.append("<span class='ic1'></span><span class='ic2'></span><span class='ic3'></span><span class='ic4'></span>");
+							
+							$divItem = $("<div/>");
+							$divItem.addClass("clr");
+							$divItem.addClass("item-inner");
+							$divItem.append("<div class='text'><h4><a href='#' name='contentremove' path='" + val.getPath() + "'><span>" + val.get("userName") + "</span></a></h4><ul class='info-list'><li class='info-item'><i class='icon i-directory'></i><span class='label'>" + val.get("userPoint") + "</span></li></ul></div>");
+							
+							$spanItemBottom = $("<span/>");
+							$spanItemBottom.addClass("item-corners");
+							$spanItemBottom.addClass("item-corners-bottom");
+							$spanItemBottom.append("<span class='ic4'></span><span class='ic3'></span><span class='ic2'></span><span class='ic1'></span>");
+							
+							$liItem.append($spanItemTop).append($divItem).append($spanItemBottom);
+							$("#contentListUl").append($liItem);
+						});
+					}, function(error) {
+						// typeof error = NetmeraException
+						alert(error.getMessage());
+					});
+				}
+				
+				$("div.text h4 a[name='contentremove']").live('click', function() {
+					var answer = confirm("Are you sure you want to delete?");
+					if (answer) {
+						var path = $(this).attr("path");
+						var content = new NetmeraContent(objectName);
+						content.setPath(_contentPath);
+						content.delete(function() {
+							searchItems();
+						}, function(error) {
+							// typeof error = NetmeraException
+							alert(error.getMessage());
+						});
+					}
+				});
+				
+				$("#newItem").click(function() {
+					$("#contentCreate").show();
+					$("#contentList").hide();
+				});
+				
+				$("#contentCreate").hide();
+				$("#contentList").hide();
+			});
+    	</script>
+	</head>
+	<body>
+	
+		<div class="content-view" id="apiInitialize">
+			<div class="simple-form">
+				<fieldset>
+					<dl class="even">
+						<dt><label for="apiKey">API Key</label></dt>
+						<dd><input class="input-text" id="apiKey" name="apiKey" type="text" /></dd>
+					</dl>
+					
+					<dl class="buttons odd last">
+						<dt><label> </label></dt>
+						<dd><button class="button-save" type="button" id="init"><span>Init</span></button></dd>
+					</dl>
+				</fieldset>
+			</div>
+		</div>
+		
+		<div class="content-view" id="contentCreate">
+			<div class="simple-form">
+				<fieldset>
+					<dl class="even">
+						<dt><label for="objectName">Object Name</label></dt>
+						<dd><input class="input-text" id="objectName" name="objectName" type="text" /></dd>
+					</dl>
+					
+					<dl class="even">
+						<dt><label for="userName">User Name</label></dt>
+						<dd><input class="input-text" id="userName" name="userName" type="text" /></dd>
+					</dl>
+	
+					<dl class="even">
+						<dt><label for="userPoint">User Point</label></dt>
+						<dd><input class="input-text" id="userPoint" name="userPoint" type="text" /></dd>
+					</dl>
+	
+					<dl class="buttons odd last">
+						<dt><label> </label></dt>
+						<dd>
+							<button class="button-save" type="button" id="save"><span>Save</span></button>
+							<button class="button-save" type="button" id="search"><span>Search</span></button>
+						</dd>
+					</dl>
+				</fieldset>
+			</div>
+		</div>
+		
+		<div class="thumbnail-list" id="contentList">
+			<div class="simple-form">
+				<fieldset>
+					<dl class="even">
+						<dt><label for="searchKey">Search Key</label></dt>
+						<dd><input class="input-text" id="searchKey" name="searchKey" type="text" /></dd>
+					</dl>
+					
+					<dl class="buttons odd last">
+						<dt><label> </label></dt>
+						<dd>
+							<button class="button-save" type="button" id="searchWithSearchText"><span>Search</span></button>
+							<button class="button-save" type="button" id="newItem"><span>New Item</span></button>
+						</dd>
+					</dl>
+				</fieldset>
+			</div>
+			<div class="small-img">
+				<ul id="contentListUl">
+					 
+				</ul>
+			</div>
+			<div class="simple-form">
+				<fieldset>
+					<dl class="buttons odd last">
+						<dt><label> </label></dt>
+						<dd><button class="button-save" type="button" id="loadMore"><span>Load MORE</span></button></dd>
+					</dl>
+				</fieldset>
+			</div>
+		</div>
+		
+	</body>
+</html>
