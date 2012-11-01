@@ -1362,20 +1362,41 @@ var NetmeraMedia;
         };
 
         /**
-         * Deletes data from the cloud.
-         * Before calling this method path of the data should be setted by calling setPath(String) method.
-         * @param {Function} onsuccess callback function called when delete is successful
-         * @param {Function} onfail callback function called when delete failed
-         */
-        this.delete = function (onsuccess, onfail) {
+         * @name NetmeraContent#remove
+         * @function
+         * @description
+	 * Removes data from the cloud. Before calling this method path of the
+	 * data should be setted by calling setPath(String) method.
+	 * 
+	 * @param {Function} onsuccess callback function called when remove is successful
+	 * @param {Function} onfail callback function called when remove failed
+	 */
+        this.remove = function (onsuccess, onfail) {
             var stoken = (_hasOwner) ? _currentUserSt : _st;
 
             remove(_path, stoken, function () {
                 clearContent();
-                if (type.func(onsuccess))
-                    onsuccess();
+                if (type.func(onsuccess)) {
+                	onsuccess();
+                }
             }, onfail);
         };
+        
+        /**
+         * @name NetmeraContent#delete
+         * @function
+         * @description
+         * Deprecated.
+	 * Removes data from the cloud. Before calling this method path of the
+	 * data should be setted by calling setPath(String) method.
+	 * @see NetmeraContent#remove
+	 * @deprecated
+	 * Avoid using this method. Instead, use NetmeraContent#remove
+	 * 
+	 * @param {Function} onsuccess callback function called when remove is successful
+	 * @param {Function} onfail callback function called when remove failed
+	 */
+        this['delete'] = this.remove;
 
         /**
          * Gets the Object with the specified key.
